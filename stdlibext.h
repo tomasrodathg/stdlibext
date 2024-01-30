@@ -16,12 +16,8 @@
 	int main(void) {\
 		int res = 0; \
 		stk = createstack(); \
-		res = (F); \
-		if (res != 0) { \
-			clean_up(); \
-			return res; \
-		} \
-		printf("Hello, World!\n"); \
+		if((res = (F)) != 0) \
+			fprintf(stderr, "Failure running main\n"); \
 		clean_up(); \
 		return res; \
 	}
