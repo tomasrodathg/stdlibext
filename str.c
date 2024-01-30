@@ -95,8 +95,8 @@ Str *str_from(const char *s, StrType type) {
 	}
 
 	if(strcpy(str->s,s) == NULL) {
-			fprintf(stderr, "Failed to copy string literal '%s' to Str\n", s);
-			goto exitsafe;
+		fprintf(stderr, "Failed to copy string literal '%s' to Str\n", s);
+		goto exitsafe;
 	}
 
 	str->cap = (slen + 1);
