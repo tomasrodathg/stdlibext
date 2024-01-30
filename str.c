@@ -5,12 +5,10 @@
 #ifndef __PRINT_H__
 #include "./print.h"
 #endif 
-
-#ifndef STR_H
+#ifndef __STR_H__
 #include "./str.h"
 #endif
-
-#ifndef STACK_H
+#ifndef __STACK_H__
 #include "./stack.h"
 #endif
 
