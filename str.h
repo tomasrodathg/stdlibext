@@ -12,7 +12,10 @@
  * - A pointer to the first `char` of the array of `char`'s  *
  * - A length, which is the current size of the `String`		 *
  * - A capacity, which is the maximum allocatable capacity,  *
- *   which can be expanded via calls to `grow`.							 *
+ *   which can be expanded via calls to `grow`.							 *	
+ * - A growth factor, which for stays a (*2), it doubles the *
+ *   difference between current size and new size to calc	   *
+ *   the new capacity																				 *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 typedef enum {
 	Unsafe = 0,
