@@ -14,16 +14,16 @@
 void print_string_err(int err) 
 {
 	switch (err) {
-		case 1: 
+		case STR_GENERIC_ERR: 
 			fprintf(stderr, "Failed with a 'Generic Str Error'. This is an error I did not expect!\n");
 			break;
-		case 2:
+		case STR_ALLOC_ERR:
 			fprintf(stderr, "Error due to a failed memory allocation: errno %d.\n", errno);
 			break;
-		case 3:
+		case STR_GROW_ERR:
 			fprintf(stderr, "Error when attempting to grow the 'str' via realloc: errno %d.\n", errno);
 			break;
-		case 4:
+		case STR_CPY_ERR:
 			fprintf(stderr, "Failed to copy a value to the 'str' memory location.\n");
 			break;
 		}
