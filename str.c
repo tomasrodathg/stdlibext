@@ -76,34 +76,66 @@ int grow_safe_string(string *str, size_t input_len)
 {
 	size_t new_cap = (input_len >= str->cap) 
 		? grow(str, (input_len - str->cap) * str->gfactor) 
-		: 0;
+		: str->cap;
 
 	return new_cap;
 }
 
+/* Clears the string without deallocating memory.
+ * Simply put, it zeroes the initialized memory so it no longer 
+ * holds any actual "text"
+ *
+ * # linux man <string.h> (as an alternative for `memset`):
+ * void bzero(void *s, size_t len);
+ */
+void clear(string *str) 
+{
+	// zero the value at the memory address
+	bzero(str->s, str->len);
+
+	// set the length back to zero, 'capacity remains unchanged'
+	str->len = 0;
+}
+
 int pushstring(string *str, const char *s) 
 {
+	// set an initial err value to STR_GENERIC_ERR
+	// in case something goes wrong unexpectedly
 	int err = STR_GENERIC_ERR;
-	size_t new_cap, input_len;
+	size_t new_cap, prev_cap, input_len;
 
-	new_cap = str->cap;
+	// initialize the previous capacity and new capacity 
+	// as the current string capacity
+	prev_cap = new_cap = str->cap;
 	input_len = strlen(s);
+
+	// if the `string` is of type `Safe`, call 'grow' to dynamically
+	// grow the capacity if needed.
 	if (str->type == Safe) new_cap = grow_safe_string(str, input_len);
-	if (new_cap > 0) goto handle_successful_grow;
+	
+	// if the new capacity is greater or equal than the previous capacity
+	// goto `handle_successful_grow` to copy the new string to buffer
+	if (new_cap >= prev_cap) goto handle_successful_grow;
 	err = errno;
 	goto handle_failed_push;
 
+// this copies the input into the memory of the string object
 handle_successful_grow:
 	if (strcpy(str->s,s) != NULL) goto handle_successful_push;
 	err = STR_CPY_ERR;
 	goto handle_failed_push;
 
+// this increases the capacity of the string if there's been realloc;
+// if there's been a reallocation the growth factor of capacity is doubled;
+// it also sets the length to the input length + 1 (to cater for '\0')
 handle_successful_push:
 	str->len = ++input_len;
+	if(new_cap > prev_cap) str->gfactor *= 2;
 	str->cap = new_cap;
-	str->gfactor *= 2;
 	return 0;
 
+// in case of failure, return an error value (int) and 
+// print the textual representation of the error.
 handle_failed_push:
 	print_string_err(err);
 	return err;

@@ -36,3 +36,4 @@ string *string_from(const char*, str_type);
 void print_string(string *);
 void stringfree(string *);
 void stringclean(void *);
+void clear(string *);
