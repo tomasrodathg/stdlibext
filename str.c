@@ -32,7 +32,7 @@ void print_string_err(int err)
 void print_string(string *str) 
 {
 	(str->type == Safe) 
-	? println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n\tstack pos: %lu\n\tgrowth_factor: %lu", str->s, str->cap, str->len, str->spos, str->gfactor)
+	? println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n\tstack pos: %lu\n\tgrowth_factor: %lu", empty_or_val(str->s), str->cap, str->len, str->spos, str->gfactor)
 	: println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n", str->s, str->cap, str->len);
 }
 
