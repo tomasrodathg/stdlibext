@@ -73,11 +73,9 @@ int _grow(void *ptr, size_t inc)
 
 int grow_safe_string(string *str, size_t input_len) 
 {
-	size_t new_cap = (input_len >= str->cap) 
-		? grow(str, (input_len - str->cap) * str->gfactor) 
-		: str->cap;
-
-	return new_cap;
+	return (input_len >= str->cap) 
+	? grow(str, (input_len - str->cap) * str->gfactor) 
+	: str->cap;
 }
 
 /* Clears the string without deallocating memory.
