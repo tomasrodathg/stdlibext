@@ -2,8 +2,9 @@
 #include <stdio.h>
 #include "./stdlibext.h"
 
-int smain(void) {
-	Str *str = str_from("This is a new Str", Safe);
+int smain(void) 
+{
+	string *str = string_from("This is a new Str", Safe);
 	str->print(str);
 	str->pushstr(str, "This is a much longer string than before");
 	str->print(str);
