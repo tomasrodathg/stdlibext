@@ -31,10 +31,9 @@ void print_string_err(int err)
 
 void print_string(string *str) 
 {
-	if (str->type == Safe) 
-		println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n\tstack pos: %lu\n\tgrowth_factor: %lu", str->s, str->cap, str->len, str->spos, str->gfactor);
-	else
-		println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n", str->s, str->cap, str->len);
+	(str->type == Safe) 
+	? println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n\tstack pos: %lu\n\tgrowth_factor: %lu", str->s, str->cap, str->len, str->spos, str->gfactor)
+	: println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n", str->s, str->cap, str->len);
 }
 
 void _print_string(void *ptr) 
