@@ -121,14 +121,14 @@ int pushstring(string *str, const char *s)
 
 // this copies the input into the memory of the string object
 handle_successful_grow:
-	if (strcpy(str->s,s) != NULL) goto handle_successful_push;
+	if (strcpy(str->s,s) != NULL) goto handle_successful_cpy;
 	err = STR_CPY_ERR;
 	goto handle_failed_push;
 
 // this increases the capacity of the string if there's been realloc;
 // if there's been a reallocation the growth factor of capacity is doubled;
 // it also sets the length to the input length + 1 (to cater for '\0')
-handle_successful_push:
+handle_successful_cpy:
 	str->len = ++input_len;
 	if(new_cap > prev_cap) str->gfactor *= 2;
 	str->cap = new_cap;
