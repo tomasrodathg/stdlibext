@@ -25,7 +25,7 @@ string:
 	stack pos: 0
 	growth_factor: 2
 string:
-	val:
+	val: {\0}
 	cap: 120
 	len: 0
 	stack pos: 0
