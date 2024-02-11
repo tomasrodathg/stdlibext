@@ -1,19 +1,24 @@
-#include "./str.h"
 #include <stdio.h>
-#include "./stdlibext.h"
+#include "str.h"
+#include "vec.h"
+#include "safe.h"
+#include <string.h>
 
-int smain(void) 
+
+char *func(const char *str)
 {
-	string *str = string_from("This is a new Str", Safe);
-	str->print(str);
-	str->pushstr(str, "This is a much longer string than before");
-	str->print(str);
-	str->pushstr(str, "This is an eeeeeeeveeeeennnn longer stringgggggggg! It's hugeeeeeeeeee! I can't believe it!");
-	str->print(str);
-	clear(str);
-	str->print(str);
-	str->pushstr(str, "Same string, different length!");
-	str->print(str);
+__BEGIN_SAFE
+	Str *s = str_from(str);
+	if (allocerr) fprintf(stderr, "allocation error: %d\n", allocerr_reason);
+	printf("%s\n", s->ptr);
+	RETURN(s);
+__END_SAFE
+}
+
+
+int smain(void)
+{
+	func("This is one string");
 	return 0;
 }
-__SAFE_MAIN__(smain())
+__GLOBAL_ALLOC(smain)

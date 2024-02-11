@@ -1,11 +1,9 @@
 #include <stdio.h>
-#ifndef STACK_H
 #include "./stack.h"
-#endif
 
 Stack *stk = NULL;
 
-int pushobj(void *obj, void (*cleanup)(void*)) 
+int pushobj(void *obj, void (*clean)(void*)) 
 {
 	object *o = (object *) malloc(sizeof(object));
 	if (o == NULL) {
@@ -13,7 +11,7 @@ int pushobj(void *obj, void (*cleanup)(void*))
 		return 1;
 	}
 	o->obj = obj;
-	o->cleanup = cleanup; 
+	o->clean = clean; 
 
 	return push(stk, o);
 }
@@ -21,7 +19,7 @@ int pushobj(void *obj, void (*cleanup)(void*))
 void objfree(object *o) 
 {
 	if (o != NULL) {
-		if (o->obj != NULL) o->cleanup(o->obj);
+		if (o->obj != NULL) o->clean(o->obj);
 		free(o);
 	}
 }

@@ -1,13 +1,14 @@
 #include <stdlib.h>
-
+#ifndef __STACK_H__
+#define __STACK_H__
 #define MAX_STACK_SIZE 100
 
 typedef struct {
-	void * obj;
-	void (*cleanup)(void*);
+	void *obj;
+	void (*clean)(void*);
 } object;
 
-int pushobj(void *obj, void (*cleanup)(void*));
+int pushobj(void *obj, void (*clean)(void*));
 void objfree(object *o);
 
 typedef struct {
@@ -23,3 +24,4 @@ Stack *createstack(void);
 void freestack(Stack *stk);
 
 extern Stack *stk;
+#endif

@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
+#ifndef __STR_H__
+#define __STR_H__
 #ifndef __STR_ERRS__
 #define STR_GENERIC_ERR 1
 #define STR_ALLOC_ERR 2
@@ -17,26 +17,17 @@
  *   difference between current size and new size to calc	   *
  *   the new capacity																				 *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-typedef enum {
-	Unsafe = 0,
-	Safe = 1,
-} str_type;
-
 typedef struct {
-	char *s;
-	str_type type;
+	char *ptr;
 	size_t cap;
 	size_t len;
-	size_t spos;
 	size_t gfactor;
 	void (*print)(void *);
-	int (*grow)(void *, size_t);
-	int (*pushstr)(void *, const char *);
-} string;
+} Str;
 
-string *string_from(const char*, str_type);
-
-void print_string(string *);
-void stringfree(string *);
-void stringclean(void *);
-void clear(string *);
+Str *str_from(const char*);
+int push_str_safe(Str *, const char *);
+void print_str(Str *);
+void str_free(Str *);
+void clear(Str *);
+#endif

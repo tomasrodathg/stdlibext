@@ -1,27 +1,26 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <assert.h>
 #ifndef __PRINT_H__
 #include "./print.h"
 #endif 
-#ifndef __STR_H__
 #include "./str.h"
-#endif
-#ifndef __STACK_H__
+#include "safe.h"
 #include "./stack.h"
-#endif
 
-void print_string_err(int err) 
+void print_str_err(int err) 
 {
 	switch (err) {
 		case STR_GENERIC_ERR: 
 			fprintf(stderr, "Failed with a 'Generic Str Error'. This is an error I did not expect!\n");
 			break;
 		case STR_ALLOC_ERR:
-			fprintf(stderr, "Error due to a failed memory allocation: errno %d.\n", errno);
+			fprintf(stderr, "Error due to a failed memory allocation: errno |%s|.\n", strerror(errno));
 			break;
 		case STR_GROW_ERR:
-			fprintf(stderr, "Error when attempting to grow the 'str' via realloc: errno %d.\n", errno);
+			fprintf(stderr, "Error when attempting to grow the 'str' via realloc: errno |%s|.\n", strerror(errno));
 			break;
 		case STR_CPY_ERR:
 			fprintf(stderr, "Failed to copy a value to the 'str' memory location.\n");
@@ -29,49 +28,41 @@ void print_string_err(int err)
 		}
 }
 
-void print_string(string *str) 
+void print_str(Str *str) 
 {
-	(str->type == Safe) 
-	? println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n\tstack pos: %lu\n\tgrowth_factor: %lu", empty_or_val(str->s), str->cap, str->len, str->spos, str->gfactor)
-	: println("string:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n", str->s, str->cap, str->len);
+	println("str:\n\tval: %s\n\tcap: %lu\n\tlen: %lu\n\tgrowth_factor: %lu", empty_or_val(str->ptr), str->cap, str->len, str->gfactor);
 }
 
-void _print_string(void *ptr) 
+void _print_str(void *ptr) 
 {
-	print_string((string *)ptr);
+	print_str((Str *)ptr);
 }
 
-void stringfree(string *str) 
+void str_free(Str *str) 
 {
 	// check if the `String` pointer has not already been dropped
 	if (str != NULL) {
-		if (str->s != NULL) free(str->s);
+		if (str->ptr != NULL) free(str->ptr);
 		free(str);
 	}
 }
 
 // returns a negative value if realloc failed, otherwise it
 // returns the new size.
-int grow(string *str, size_t inc) 
+int grow(Str *str, size_t inc) 
 {
-	size_t curr_size = str->cap;
+	char *tmp = {0};
+	if((tmp = (char *)realloc(str->ptr, (str->cap + inc) * sizeof(char))) != NULL) goto increase_capacity;
+	free(str->ptr);
+	return STR_GROW_ERR;
 
-	str->s = (char *)realloc(str->s, (curr_size + inc) * sizeof(char));
-	if (str->s == NULL) {
-		fprintf(stderr, "Failed to reallocate memory for the Str buffer\n");
-		return -1;
-	}
-
+increase_capacity:
+	str->ptr = tmp;
 	str->cap += inc;
 	return str->cap;
 }
 
-int _grow(void *ptr, size_t inc) 
-{
-	return grow((string *)ptr, inc);
-}
-
-int grow_safe_string(string *str, size_t input_len) 
+int grow_safe_str(Str *str, size_t input_len) 
 {
 	return (input_len >= str->cap) 
 	? grow(str, (input_len - str->cap) * str->gfactor) 
@@ -85,16 +76,13 @@ int grow_safe_string(string *str, size_t input_len)
  * # linux man <string.h> (as an alternative for `memset`):
  * void bzero(void *s, size_t len);
  */
-void clear(string *str) 
+void clear(Str *str) 
 {
-	// zero the value at the memory address
-	bzero(str->s, str->len);
-
-	// set the length back to zero, 'capacity remains unchanged'
+	bzero(str->ptr, str->len);
 	str->len = 0;
 }
 
-int pushstring(string *str, const char *s) 
+int push_str_safe(Str *str, const char *s)
 {
 	// set an initial err value to STR_GENERIC_ERR
 	// in case something goes wrong unexpectedly
@@ -106,9 +94,8 @@ int pushstring(string *str, const char *s)
 	prev_cap = new_cap = str->cap;
 	input_len = strlen(s);
 
-	// if the `string` is of type `Safe`, call 'grow' to dynamically
-	// grow the capacity if needed.
-	if (str->type == Safe) new_cap = grow_safe_string(str, input_len);
+	// call 'grow' to dynamically grow the capacity if needed.
+	new_cap = grow_safe_str(str, input_len);
 	
 	// if the new capacity is greater or equal than the previous capacity
 	// goto `handle_successful_grow` to copy the new string to buffer
@@ -118,7 +105,7 @@ int pushstring(string *str, const char *s)
 
 // this copies the input into the memory of the string object
 handle_successful_grow:
-	if (strcpy(str->s,s) != NULL) goto handle_successful_cpy;
+	if (strcpy(str->ptr,s) != NULL) goto handle_successful_cpy;
 	err = STR_CPY_ERR;
 	goto handle_failed_push;
 
@@ -132,60 +119,45 @@ handle_successful_cpy:
 // in case of failure, return an error value (int) and 
 // print the textual representation of the error.
 handle_failed_push:
-	print_string_err(err);
+	print_str_err(err);
 	return err;
 }
 
-int _pushstring(void *ptr, const char *s) 
+void clean(void *ptr) 
 {
-	return pushstring((string *)ptr, s);
+	str_free((Str *) ptr);
 }
 
-string *string_from(const char *s, str_type type) 
+Str *str_from(const char *s) 
 {
 	int err = STR_GENERIC_ERR;
-	string *str = {0};
-	size_t slen, spos, gfactor;
+	Str *str = {0};
+	size_t slen;
 
-	if ((str = (string *)malloc(sizeof(string))) != NULL) goto handle_buffer_alloc;
+	if ((str = smalloc(sizeof(Str))) != NULL) goto handle_buffer_alloc;
 	err = errno;
 	goto handle_failure;
 
 handle_buffer_alloc:
 	slen = strlen(s);
-	if ((str->s = (char *)malloc((slen + 1) * sizeof(char))) != NULL) goto handle_strcpy;
+	if ((str->ptr = smalloc((slen + 1) * sizeof(char))) != NULL) goto handle_strcpy;
 	err = errno;
 	goto handle_failure;
 
 handle_strcpy:
-	if (strcpy(str->s,s) != NULL) goto handle_safe_str; 
+	if (strcpy(str->ptr,s) != NULL) goto handle_safe_str; 
 	err = STR_CPY_ERR;
 	goto handle_failure;
 
 handle_safe_str:
-	spos = gfactor = 0;
-	if (type != Safe) goto handle_assign_values;
-	if ((spos = pushobj(str, (*stringclean)) < 0)) goto handle_failure;
-	gfactor = 2;
-
-handle_assign_values:
 	str->cap = (slen + 1);
 	str->len = (slen + 1);
-	str->type = type;
-	str->print = _print_string;
-	str->grow = _grow;
-	str->pushstr = _pushstring;
-	str->gfactor = gfactor;
-	str->spos = spos;
+	str->print = _print_str;
+	str->gfactor = 2;
 	return str;
 
 handle_failure:
-	print_string_err(err);
-	stringfree(str);	
+	print_str_err(err);
+	str_free(str);	
 	return NULL;
-}
-
-void stringclean(void *ptr) 
-{
-	stringfree((string *) ptr);
 }
