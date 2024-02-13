@@ -13,7 +13,7 @@ struct timer {
 struct timer *initt(void)
 {
 	struct timer *t;
-	if(!(t = (struct timer*) malloc(sizeof(struct timer)))) exit(1);
+	if(!(t = (struct timer*) malloc(sizeof(struct timer)))) return NULL;
 	return t;
 }
 
